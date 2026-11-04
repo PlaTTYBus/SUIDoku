@@ -34,6 +34,7 @@ Input is one binary path per line (full paths or bare names); blank lines and
 `#` comments are ignored. Matching is by basename.
 
 ## Install
+This will install the script as a symlink so that `git pull` keeps it updated:
 
 ```fish
 ln -sf (realpath grecon.fish) ~/.local/bin/grecon
