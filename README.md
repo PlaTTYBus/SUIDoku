@@ -35,11 +35,8 @@ Input is one binary path per line (full paths or bare names); blank lines and
 
 ## Install
 
-SUIDoku is a single self-contained script.
-
 ```fish
-chmod +x SUIDoku
-cp SUIDoku ~/.local/bin/SUIDoku
+ln -sf (realpath grecon.fish) ~/.local/bin/grecon
 ```
 
 ## How it works
