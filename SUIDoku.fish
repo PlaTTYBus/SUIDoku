@@ -135,11 +135,24 @@ fetch_api; or exit 1
 # and emits TSV rows:  path <TAB> name <TAB> "Label1, Label2" <TAB> verbose-block
 
 set -l wanted_file (mktemp (test -n "$TMPDIR"; and echo $TMPDIR; or echo /tmp)/suidoku.want.XXXXXX)
-# build [{path,name}] preserving first occurrence order, de-duplicated by path
+# build [{path,name,versioned}] preserving first occurrence order, deduped by path.
+# `name` is the basename with a trailing "-<version>" stripped (e.g.
+# snap-4.5.0 -> snap) so the versioned binary still matches its GTFOBins entry;
+# `versioned` records that a strip happened so we can flag it for manual review.
 grep -vE '^[[:space:]]*($|#)' "$tmp_in" \
     | awk '!seen[$0]++ {print}' \
-    | jq -R '{path: ., name: (. | sub("^.*/"; ""))}' \
+    | jq -R '
+        . as $line
+        | ($line | sub("^.*/"; "")) as $base
+        | ($base | sub("-[0-9][0-9.]*$"; "")) as $name
+        | {path: $line, name: $name, versioned: ($name != $base)}' \
     | jq -s '.' >"$wanted_file"
+
+# Warn (to stderr, so -q stays clean) about every path that carried a version
+# number: the match is on the stripped name and may be wrong, so flag it.
+for p in (jq -r '.[] | select(.versioned) | .path' "$wanted_file")
+    echo "Version number detected on: $p please manually review" >&2
+end
 
 set -l total (jq 'length' "$wanted_file")
 
